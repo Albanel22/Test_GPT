@@ -1,1 +1,25 @@
+name: Kernel CI Test
 
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Display system information
+        run: |
+          echo "GitHub Actions fonctionne !"
+          uname -a
+          clang --version || true
+          gcc --version || true
+
+      - name: List repository files
+        run: |
+          pwd
+          ls -la
+          find . -maxdepth 3 -type f
