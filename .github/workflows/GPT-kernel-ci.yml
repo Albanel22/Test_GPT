@@ -1,4 +1,4 @@
-name: test-GPT Kernel Build
+name: GPT-Kernel CI - Motorola One 5G Ace
 
 on:
   workflow_dispatch:
@@ -8,48 +8,63 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Install packages
+      - name: Install build dependencies
         run: |
-          sudo apt update
-          sudo apt install -y \
-            git bc bison flex \
+          sudo apt-get update
+
+          sudo apt-get install -y \
+            bc \
+            bison \
             build-essential \
-            clang llvm lld \
+            flex \
+            git \
+            curl \
+            zip \
+            unzip \
+            python3 \
+            clang \
+            llvm \
+            lld \
+            ccache \
             gcc-aarch64-linux-gnu \
             gcc-arm-linux-gnueabi \
             libssl-dev \
             libelf-dev \
             libncurses-dev \
-            ccache \
-            curl \
-            zip \
-            unzip \
-            python3 \
-            device-tree-compiler
+            device-tree-compiler \
+            patch
 
-      - name: Clone Copilote
-        run: |
-          git clone --depth=1 \
-            --branch test-sukisu \
-            https://github.com/Albanel22/Copilote.git
+      - name: Setup ccache
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/ccache
+          key: kernel-ccache-${{ runner.os }}
+          restore-keys: |
+            kernel-ccache-
 
-      - name: Make Copilote scripts executable
+      - name: Prepare scripts
         run: |
-          chmod +x Copilote/build/*.sh
+          chmod +x build/*.sh
 
-      - name: Run Copilote Build
+      - name: Show project tree
         run: |
-          cd Copilote
+          pwd
+          ls -la
+          find . -maxdepth 2 -type f | sort
+
+      - name: Run Copilote Build System
+        run: |
           ./build/run.sh
 
-      - name: Upload artifacts
+      - name: Upload build artifacts
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Copilote-Build
+          name: Kernel-Build
           path: |
-            Copilote/ReSukiSU-AnyKernel3-kiev.zip
-            Copilote/kernel_src/build.log
-            Copilote/kernel_src/out/**/*
+            ReSukiSU-AnyKernel3-kiev.zip
+            kernel_src/build.log
+            kernel_src/out/**/*
