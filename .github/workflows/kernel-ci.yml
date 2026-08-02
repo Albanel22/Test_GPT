@@ -29,18 +29,27 @@ jobs:
             python3 \
             device-tree-compiler
 
-      - name: Make scripts executable
-        run: chmod +x build/*.sh
+      - name: Clone Copilote
+        run: |
+          git clone --depth=1 \
+            --branch test-sukisu \
+            https://github.com/Albanel22/Copilote.git
 
-      - name: Build kernel
-        run: ./build/run.sh
+      - name: Make Copilote scripts executable
+        run: |
+          chmod +x Copilote/build/*.sh
+
+      - name: Run Copilote Build
+        run: |
+          cd Copilote
+          ./build/run.sh
 
       - name: Upload artifacts
-        uses: actions/upload-artifact@v4
         if: always()
+        uses: actions/upload-artifact@v4
         with:
           name: Copilote-Build
           path: |
-            ReSukiSU-AnyKernel3-kiev.zip
-            kernel_src/build.log
-            kernel_src/out/**/*
+            Copilote/ReSukiSU-AnyKernel3-kiev.zip
+            Copilote/kernel_src/build.log
+            Copilote/kernel_src/out/**/*
