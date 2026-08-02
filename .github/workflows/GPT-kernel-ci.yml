@@ -59,6 +59,15 @@ jobs:
         run: |
           ./build/run.sh
 
+      - name: Upload kernel source files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Source
+          path: |
+            kernel_src/fs/open.c
+            kernel_src/fs/proc/task_mmu.c
+
       - name: Upload build artifacts
         if: always()
         uses: actions/upload-artifact@v4
