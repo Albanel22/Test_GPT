@@ -85,6 +85,7 @@ rm -rf drivers/kernelsu
 
 git clone \
     --depth=1 \
+    --branch v1.5.2 \
     https://github.com/resukisu/ResukiSU.git \
     drivers/kernelsu
 
