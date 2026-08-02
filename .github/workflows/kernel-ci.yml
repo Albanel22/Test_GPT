@@ -1,57 +1,46 @@
-name: Kernel CI v2
+name: Copilote Kernel Build
 
 on:
   workflow_dispatch:
 
-env:
-  KERNEL_PATH: kernel_src
-  DEFCONFIG: lito-perf_defconfig
-
 jobs:
-  prepare:
+  build:
     runs-on: ubuntu-24.04
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install packages
         run: |
           sudo apt update
           sudo apt install -y \
-            git bc bison flex build-essential \
-            libssl-dev libelf-dev libncurses-dev \
+            git bc bison flex \
+            build-essential \
             clang llvm lld \
             gcc-aarch64-linux-gnu \
             gcc-arm-linux-gnueabi \
-            python3 zip unzip curl \
-            ccache device-tree-compiler
+            libssl-dev \
+            libelf-dev \
+            libncurses-dev \
+            ccache \
+            curl \
+            zip \
+            unzip \
+            python3 \
+            device-tree-compiler
 
-      - name: Clone LineageOS Kernel
-        run: |
-          git clone \
-            --depth=1 \
-            --branch lineage-23.2 \
-            https://github.com/LineageOS/android_kernel_motorola_sm8250.git \
-            ${{ env.KERNEL_PATH }}
+      - name: Make scripts executable
+        run: chmod +x build/*.sh
 
-      - name: Verify kernel
-        run: |
-          cd ${{ env.KERNEL_PATH }}
+      - name: Build kernel
+        run: ./build/run.sh
 
-          echo "Kernel version:"
-          make kernelversion
-
-          echo "Checking defconfig..."
-
-          test -f arch/arm64/configs/vendor/${{ env.DEFCONFIG }}
-
-          echo "✓ Defconfig found"
-
-      - name: Upload log
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: kernel-tree
+          name: Copilote-Build
           path: |
-            kernel_src/Makefile
-            kernel_src/arch/arm64/configs/vendor/${{ env.DEFCONFIG }}
+            ReSukiSU-AnyKernel3-kiev.zip
+            kernel_src/build.log
+            kernel_src/out/**/*
