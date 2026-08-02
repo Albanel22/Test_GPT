@@ -68,3 +68,12 @@ jobs:
             ReSukiSU-AnyKernel3-kiev.zip
             kernel_src/build.log
             kernel_src/out/**/*
+
+      - name: Upload patch reject files
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: Patch-Rejects
+          path: |
+            kernel_src/**/*.rej
+            kernel_src/**/*.orig
