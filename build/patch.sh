@@ -47,8 +47,10 @@ find "${PATCH_DIR}" -name "*.patch" -exec sed -i 's/\r$//' {} \;
 #
 echo "[INFO] Applying kernel patch..."
 
-if ! patch -p1 --forward \
-    < "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
+if ! git apply \
+    --3way \
+    --whitespace=nowarn \
+    "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
 then
     echo ""
     echo "===================================="
@@ -92,10 +94,14 @@ echo "[OK] ReSuKiSU installed."
 #
 cd drivers/kernelsu
 
-patch -p1 \
-    --forward \
-    --fuzz=2 \
-    < "${PATCH_DIR}/10_enable_susfs_for_ksu.patch"
+if ! git apply \
+    --3way \
+    --whitespace=nowarn \
+    "${PATCH_DIR}/10_enable_susfs_for_ksu.patch"
+then
+    echo "[ERROR] Failed to apply KernelSU patch."
+    exit 1
+fi
 
 cd ../..
 
