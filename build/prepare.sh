@@ -1,37 +1,48 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "======================================"
-echo " Preparing build environment"
-echo "======================================"
-
-# Charger la configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 source "${SCRIPT_DIR}/env.sh"
 
-echo "[INFO] Kernel repository : ${KERNEL_REPO}"
-echo "[INFO] Branch            : ${KERNEL_BRANCH}"
-echo "[INFO] Device            : ${DEVICE}"
+echo "===================================="
+echo " Preparing build environment"
+echo "===================================="
 
-# Cloner le noyau s'il n'existe pas
-if [ ! -d "${KERNEL_PATH}" ]; then
-    echo "[INFO] Cloning kernel source..."
+require_cmd() {
+    if ! command -v "$1" >/dev/null 2>&1; then
+        echo "[ERROR] Missing command: $1"
+        exit 1
+    fi
+}
+
+echo "[INFO] Checking required tools..."
+
+for cmd in git make patch clang zip curl python3; do
+    require_cmd "$cmd"
+done
+
+echo "[OK] Required tools found."
+
+if [ ! -d "${KERNEL_DIR}" ]; then
+    echo "[INFO] Cloning kernel..."
+
     git clone \
         --depth=1 \
         --branch "${KERNEL_BRANCH}" \
         "${KERNEL_REPO}" \
-        "${KERNEL_PATH}"
+        "${KERNEL_DIR}"
 else
-    echo "[INFO] Kernel source already present."
+    echo "[INFO] Kernel already exists."
 fi
 
-# Vérification du defconfig
-DEFCONFIG_PATH="${KERNEL_PATH}/arch/arm64/configs/vendor/${DEFCONFIG}"
+mkdir -p "${KERNEL_DIR}/arch/arm64/configs/vendor"
 
-if [ ! -f "${DEFCONFIG_PATH}" ]; then
-    echo "[ERROR] Defconfig not found:"
-    echo "        ${DEFCONFIG_PATH}"
-    exit 1
-fi
+cp -f \
+"${PERFECT_DEFCONFIG}" \
+"${KERNEL_DIR}/arch/arm64/configs/vendor/${DEFCONFIG}"
 
-echo "[OK] Defconfig found."
+echo "[OK] Defconfig installed."
+
+mkdir -p "${KERNEL_DIR}/${BUILD_DIR}"
+
+echo "[OK] Build directory ready."
