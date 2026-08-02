@@ -1,4 +1,4 @@
-name: Copilote Kernel Build
+name: test-GPT Kernel Build
 
 on:
   workflow_dispatch:
