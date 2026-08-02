@@ -1,25 +1,57 @@
-name: Kernel CI Test
+name: Kernel CI v2
 
 on:
   workflow_dispatch:
 
+env:
+  KERNEL_PATH: kernel_src
+  DEFCONFIG: lito-perf_defconfig
+
 jobs:
-  test:
+  prepare:
     runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Display system information
+      - name: Install dependencies
         run: |
-          echo "GitHub Actions fonctionne !"
-          uname -a
-          clang --version || true
-          gcc --version || true
+          sudo apt update
+          sudo apt install -y \
+            git bc bison flex build-essential \
+            libssl-dev libelf-dev libncurses-dev \
+            clang llvm lld \
+            gcc-aarch64-linux-gnu \
+            gcc-arm-linux-gnueabi \
+            python3 zip unzip curl \
+            ccache device-tree-compiler
 
-      - name: List repository files
+      - name: Clone LineageOS Kernel
         run: |
-          pwd
-          ls -la
-          find . -maxdepth 3 -type f
+          git clone \
+            --depth=1 \
+            --branch lineage-23.2 \
+            https://github.com/LineageOS/android_kernel_motorola_sm8250.git \
+            ${{ env.KERNEL_PATH }}
+
+      - name: Verify kernel
+        run: |
+          cd ${{ env.KERNEL_PATH }}
+
+          echo "Kernel version:"
+          make kernelversion
+
+          echo "Checking defconfig..."
+
+          test -f arch/arm64/configs/vendor/${{ env.DEFCONFIG }}
+
+          echo "✓ Defconfig found"
+
+      - name: Upload log
+        uses: actions/upload-artifact@v4
+        with:
+          name: kernel-tree
+          path: |
+            kernel_src/Makefile
+            kernel_src/arch/arm64/configs/vendor/${{ env.DEFCONFIG }}
