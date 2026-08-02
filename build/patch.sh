@@ -50,7 +50,7 @@ echo "[INFO] Applying kernel patch..."
 if ! patch \
     -p1 \
     --forward \
-    --reject-file=- \
+    --fuzz=3 \
     < "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
 then
     echo ""
