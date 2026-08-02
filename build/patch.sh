@@ -47,8 +47,33 @@ find "${PATCH_DIR}" -name "*.patch" -exec sed -i 's/\r$//' {} \;
 #
 echo "[INFO] Applying kernel patch..."
 
-patch -p1 --forward \
+if ! patch -p1 --forward \
     < "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
+then
+    echo ""
+    echo "===================================="
+    echo " PATCH FAILED - Collecting debug files"
+    echo "===================================="
+
+    mkdir -p "${PROJECT_ROOT}/debug"
+
+    echo "[INFO] Saving context..."
+
+    sed -n '340,460p' fs/open.c \
+        > "${PROJECT_ROOT}/debug/open_context.txt" || true
+
+    sed -n '1,80p' fs/proc/task_mmu.c \
+        > "${PROJECT_ROOT}/debug/task_mmu_context.txt" || true
+
+    find . -name "*.rej" -exec cp --parents {} "${PROJECT_ROOT}/debug/" \; || true
+    find . -name "*.orig" -exec cp --parents {} "${PROJECT_ROOT}/debug/" \; || true
+
+    echo ""
+    echo "[INFO] Debug files saved in:"
+    echo "${PROJECT_ROOT}/debug"
+
+    exit 1
+fi
 
 #
 # Install ReSuKiSU
