@@ -75,6 +75,4 @@ jobs:
         with:
           name: Kernel-Debug
           path: |
-            *.txt
-            kernel_src/**/*.rej
-            kernel_src/**/*.orig
+            debug/**
