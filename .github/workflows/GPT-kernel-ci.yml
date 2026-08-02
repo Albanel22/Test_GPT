@@ -69,11 +69,12 @@ jobs:
             kernel_src/build.log
             kernel_src/out/**/*
 
-      - name: Upload patch reject files
+      - name: Upload debug files
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: Patch-Rejects
+          name: Kernel-Debug
           path: |
+            *.txt
             kernel_src/**/*.rej
             kernel_src/**/*.orig
