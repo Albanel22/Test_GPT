@@ -47,10 +47,11 @@ find "${PATCH_DIR}" -name "*.patch" -exec sed -i 's/\r$//' {} \;
 #
 echo "[INFO] Applying kernel patch..."
 
-if ! git apply \
-    --3way \
-    --whitespace=nowarn \
-    "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
+if ! patch \
+    -p1 \
+    --forward \
+    --reject-file=- \
+    < "${PATCH_DIR}/50_add_susfs_in_kernel-4.19.patch"
 then
     echo ""
     echo "===================================="
