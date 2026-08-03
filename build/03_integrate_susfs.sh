@@ -57,8 +57,8 @@ echo ""
 echo "[3/6] Normalizing patches..."
 
 find "${PATCH_KERNEL}" \
--name "*.patch" \
--exec sed -i 's/\r$//' {} \;
+    -name "*.patch" \
+    -exec sed -i 's/\r$//' {} \;
 
 echo "[ OK ]"
 
@@ -71,44 +71,39 @@ echo "[4/6] Applying kernel patch..."
 
 mkdir -p "${DEBUG_DIR}"
 
-PATCH_LOG="${DEBUG_DIR}/kernel_patch.log"
+if ! git apply \
+    --reject \
+    --verbose \
+    --whitespace=nowarn \
+    "${PATCH_KERNEL}/50_add_susfs_in_kernel-4.19.patch" \
+    2>&1 | tee "${DEBUG_DIR}/git_apply.log"
+then
 
-echo ""
-echo "========================================"
-echo " PATCH FAILED"
-echo "========================================"
-
-echo ""
-echo "----- git apply output finished -----"
-
-echo ""
-echo "Searching reject/orig files..."
-
-find . -name "*.rej" | while read f; do
     echo ""
     echo "========================================"
-    echo "REJECT FILE: $f"
+    echo " PATCH FAILED"
     echo "========================================"
-    cat "$f"
-done
 
-find . -name "*.orig" | while read f; do
     echo ""
-    echo "========================================"
-    echo "ORIGINAL FILE: $f"
-    echo "========================================"
-    sed -n '1,250p' "$f"
-done
+    echo "============= git apply log ============="
+    cat "${DEBUG_DIR}/git_apply.log"
 
-echo ""
-echo "========================================"
-echo "git diff"
-echo "========================================"
+    echo ""
+    echo "============= reject files ============="
+    find . -name "*.rej" -print -exec cat {} \;
 
-git diff --stat || true
-git diff || true
+    echo ""
+    echo "============= orig files ============="
+    find . -name "*.orig" -print
 
-exit 1
+    echo ""
+    echo "============= git diff ============="
+    git diff --stat || true
+    git diff || true
+
+    exit 1
+
+fi
 
 ############################################################
 # Verify
