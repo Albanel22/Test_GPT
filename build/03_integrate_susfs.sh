@@ -73,34 +73,42 @@ mkdir -p "${DEBUG_DIR}"
 
 PATCH_LOG="${DEBUG_DIR}/kernel_patch.log"
 
-if git apply \
-    --3way \
-    --whitespace=nowarn \
-    "${PATCH_KERNEL}/50_add_susfs_in_kernel-4.19.patch" \
-    >"${PATCH_LOG}" 2>&1
-then
+echo ""
+echo "========================================"
+echo " PATCH FAILED"
+echo "========================================"
 
-    echo "[ OK ]"
+echo ""
+echo "----- git apply output finished -----"
 
-else
+echo ""
+echo "Searching reject/orig files..."
 
-    echo "[WARNING] Patch not fully applied."
-
-    echo "Searching reject files..."
-
-    find . -name "*.rej" \
-        -exec cp --parents {} "${DEBUG_DIR}" \; || true
-
-    find . -name "*.orig" \
-        -exec cp --parents {} "${DEBUG_DIR}" \; || true
-
+find . -name "*.rej" | while read f; do
     echo ""
-    echo "Patch report saved:"
-    echo "${PATCH_LOG}"
+    echo "========================================"
+    echo "REJECT FILE: $f"
+    echo "========================================"
+    cat "$f"
+done
 
-    exit 1
+find . -name "*.orig" | while read f; do
+    echo ""
+    echo "========================================"
+    echo "ORIGINAL FILE: $f"
+    echo "========================================"
+    sed -n '1,250p' "$f"
+done
 
-fi
+echo ""
+echo "========================================"
+echo "git diff"
+echo "========================================"
+
+git diff --stat || true
+git diff || true
+
+exit 1
 
 ############################################################
 # Verify
