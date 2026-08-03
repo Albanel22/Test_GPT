@@ -56,10 +56,8 @@ export KSU_DIR="${KERNEL_DIR}/drivers/kernelsu"
 
 # -------- SUSFS --------
 
-export SUSFS_DIR="${PROJECT_ROOT}/susfs"
-
-export SUSFS_C="${SUSFS_DIR}/susfs.c"
-export SUSFS_H="${SUSFS_DIR}/susfs.h"
+export SUSFS_C="${PROJECT_ROOT}/susfs.c"
+export SUSFS_H="${PROJECT_ROOT}/susfs.h"
 
 # -------- Patches --------
 
