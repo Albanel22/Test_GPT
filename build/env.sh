@@ -124,13 +124,14 @@ export SUSFS_H="${PROJECT_ROOT}/susfs.h"
 
 # -------- Patches --------
 
+# -------- Patches --------
+
 export PATCH_ROOT="${PROJECT_ROOT}/patches"
 
-export PATCH_KERNEL="${PATCH_ROOT}/kernel"
-
-export PATCH_KSU="${PATCH_ROOT}/kernelsu"
-
-export PATCH_DEVICE="${PATCH_ROOT}/device"
+# Les patches sont actuellement tous dans le même dossier
+export PATCH_KERNEL="${PATCH_ROOT}"
+export PATCH_KSU="${PATCH_ROOT}"
+export PATCH_DEVICE="${PATCH_ROOT}"
 
 # -------- AnyKernel --------
 
