@@ -1,87 +1,150 @@
-name: GPT-Kernel CI - Motorola One 5G Ace
+name: Test-GPT Kernel Builder
 
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  DEVICE: kiev
+
 jobs:
+
   build:
-    runs-on: ubuntu-24.04
+
+    runs-on: ubuntu-22.04
+
+    timeout-minutes: 180
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
 
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
+    ########################################################
+    # Checkout
+    ########################################################
 
-          sudo apt-get install -y \
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    ########################################################
+    # Dependencies
+    ########################################################
+
+    - name: Install dependencies
+      run: |
+
+        sudo apt update
+
+        sudo apt install -y \
             bc \
             bison \
             build-essential \
-            flex \
-            git \
-            curl \
-            zip \
-            unzip \
-            python3 \
-            clang \
-            llvm \
-            lld \
             ccache \
-            gcc-aarch64-linux-gnu \
-            gcc-arm-linux-gnueabi \
-            libssl-dev \
+            clang \
+            curl \
+            flex \
+            gcc \
+            git \
             libelf-dev \
-            libncurses-dev \
-            device-tree-compiler \
-            patch
+            libssl-dev \
+            lld \
+            pahole \
+            python3 \
+            unzip \
+            wget \
+            zip
 
-      - name: Setup ccache
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ccache
-          key: kernel-ccache-${{ runner.os }}
-          restore-keys: |
-            kernel-ccache-
+    ########################################################
+    # Permissions
+    ########################################################
 
-      - name: Prepare scripts
-        run: |
-          chmod +x build/*.sh
+    - name: Make scripts executable
+      run: |
 
-      - name: Show project tree
-        run: |
-          pwd
-          ls -la
-          find . -maxdepth 2 -type f | sort
+        chmod +x build/*.sh
 
-      - name: Run Copilote Build System
-        run: |
-          ./build/run.sh
+    ########################################################
+    # STEP 00
+    ########################################################
 
-      - name: Upload kernel source files
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-Source
-          path: |
-            kernel_src/fs/open.c
-            kernel_src/fs/proc/task_mmu.c
+    - name: Prepare Environment
+      run: ./build/00_prepare.sh
 
-      - name: Upload build artifacts
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-Build
-          path: |
-            ReSukiSU-AnyKernel3-kiev.zip
-            kernel_src/build.log
-            kernel_src/out/**/*
+    ########################################################
+    # STEP 01
+    ########################################################
 
-      - name: Upload debug files
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: Kernel-Debug
-          path: |
-            debug/**
+    - name: Clone Kernel
+      run: ./build/01_clone_kernel.sh
+
+    ########################################################
+    # STEP 02
+    ########################################################
+
+    - name: Integrate ReSuKiSU
+      run: ./build/02_integrate_resukisu.sh
+
+    ########################################################
+    # STEP 03
+    ########################################################
+
+    - name: Integrate SuSFS
+      run: ./build/03_integrate_susfs.sh
+
+    ########################################################
+    # STEP 04
+    ########################################################
+
+    - name: Apply Motorola patches
+      run: ./build/04_apply_device_patches.sh
+
+    ########################################################
+    # STEP 05
+    ########################################################
+
+    - name: Configure Kernel
+      run: ./build/05_configure_kernel.sh
+
+    ########################################################
+    # STEP 06
+    ########################################################
+
+    - name: Build Kernel
+      run: ./build/06_build_kernel.sh
+
+    ########################################################
+    # STEP 07
+    ########################################################
+
+    - name: Package AnyKernel3
+      run: ./build/07_package_anykernel.sh
+
+    ########################################################
+    # STEP 08
+    ########################################################
+
+    - name: Collect Debug
+      if: always()
+      run: ./build/08_collect_logs.sh
+
+    ########################################################
+    # Upload Debug
+    ########################################################
+
+    - name: Upload Debug
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Debug
+        path: debug/
+
+    ########################################################
+    # Upload Build
+    ########################################################
+
+    - name: Upload Kernel ZIP
+      if: success()
+      uses: actions/upload-artifact@v4
+      with:
+        name: Kernel
+        path: out/*.zip
