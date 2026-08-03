@@ -71,38 +71,69 @@ echo "[4/6] Applying kernel patch..."
 
 mkdir -p "${DEBUG_DIR}"
 
-if ! git apply \
+PATCH="${PATCH_KERNEL}/50_add_susfs_in_kernel-4.19.patch"
+
+echo ""
+echo "Running dry-run..."
+
+git apply \
+    --check \
+    --reject \
+    --whitespace=nowarn \
+    "$PATCH" \
+    >"${DEBUG_DIR}/git_check.log" 2>&1 || true
+
+echo ""
+echo "Applying patch..."
+
+git apply \
     --reject \
     --verbose \
     --whitespace=nowarn \
-    "${PATCH_KERNEL}/50_add_susfs_in_kernel-4.19.patch" \
-    2>&1 | tee "${DEBUG_DIR}/git_apply.log"
-then
+    "$PATCH" \
+    >"${DEBUG_DIR}/git_apply.log" 2>&1 || true
 
+echo ""
+echo "========================================"
+echo " Patch report"
+echo "========================================"
+
+cat "${DEBUG_DIR}/git_apply.log"
+
+echo ""
+echo "============= REJECT FILES ============="
+
+FOUND_REJ=0
+
+while IFS= read -r FILE
+do
+    FOUND_REJ=1
+    echo ""
+    echo "----------------------------------------"
+    echo "$FILE"
+    echo "----------------------------------------"
+    cat "$FILE"
+done < <(find . -name "*.rej")
+
+echo ""
+
+echo "============= ORIG FILES ============="
+
+find . -name "*.orig" -print
+
+echo ""
+
+echo "============= GIT DIFF ============="
+
+git diff --stat || true
+git diff || true
+
+if [ "$FOUND_REJ" -eq 1 ]; then
     echo ""
     echo "========================================"
-    echo " PATCH FAILED"
+    echo " Patch needs manual porting"
     echo "========================================"
-
-    echo ""
-    echo "============= git apply log ============="
-    cat "${DEBUG_DIR}/git_apply.log"
-
-    echo ""
-    echo "============= reject files ============="
-    find . -name "*.rej" -print -exec cat {} \;
-
-    echo ""
-    echo "============= orig files ============="
-    find . -name "*.orig" -print
-
-    echo ""
-    echo "============= git diff ============="
-    git diff --stat || true
-    git diff || true
-
     exit 1
-
 fi
 
 ############################################################
